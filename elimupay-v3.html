@@ -1,0 +1,1085 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>ElimuPay — Lipa Ada Shuleni</title>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+/* ═══════════════ TOKENS ═══════════════ */
+:root {
+  --g:    #00933B;   /* M-Pesa / Kenya green */
+  --gd:   #006B2A;
+  --gl:   #E6F5ED;
+  --gxl:  #F2FAF6;
+  --red:  #C0192B;
+  --rl:   #FFF0F2;
+  --gold: #E59A00;
+  --yl:   #FFF8E6;
+  --navy: #0C1E35;
+  --ink:  #111827;
+  --mid:  #374151;
+  --fog:  #6B7280;
+  --line: #E5E7EB;
+  --bg:   #F9FAFB;
+  --card: #FFFFFF;
+  --r:    12px;
+  --r-lg: 18px;
+  --sh:   0 1px 3px rgba(0,0,0,.08), 0 1px 2px rgba(0,0,0,.05);
+  --sh-md:0 4px 16px rgba(0,0,0,.10);
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { font-size: 16px; -webkit-tap-highlight-color: transparent; }
+body {
+  font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+  background: var(--bg);
+  color: var(--ink);
+  min-height: 100vh;
+  max-width: 430px;
+  margin: 0 auto;
+  position: relative;
+  overflow-x: hidden;
+}
+img { display: block; max-width: 100%; }
+button { font-family: inherit; cursor: pointer; border: none; outline: none; }
+input, select { font-family: inherit; outline: none; }
+
+/* ═══════════════ SCREENS ═══════════════ */
+.scr { display: none; min-height: 100vh; flex-direction: column; }
+.scr.on { display: flex; }
+
+/* ═══════════════ TOAST ═══════════════ */
+#toast {
+  position: fixed; top: 1rem; left: 50%; transform: translateX(-50%) translateY(-80px);
+  background: var(--navy); color: #fff; padding: .6rem 1.2rem;
+  border-radius: 30px; font-size: .82rem; font-weight: 600;
+  z-index: 9999; transition: transform .35s ease; white-space: nowrap;
+  box-shadow: var(--sh-md);
+}
+#toast.show { transform: translateX(-50%) translateY(0); }
+
+/* ═══════════════ ① WELCOME SCREEN ═══════════════ */
+#welcome {
+  background: var(--navy);
+  align-items: center; justify-content: center;
+  text-align: center; padding: 2rem 1.5rem;
+  position: relative; overflow: hidden;
+}
+#welcome::before {
+  content: '';
+  position: absolute; inset: 0;
+  background: radial-gradient(ellipse at 50% -10%, rgba(0,147,59,.35) 0%, transparent 65%);
+  pointer-events: none;
+}
+.wel-logo {
+  font-size: 2.6rem; font-weight: 800; color: #fff;
+  letter-spacing: -1px; margin-bottom: .3rem; position: relative; z-index: 1;
+}
+.wel-logo span { color: #4ADE80; }
+.wel-tag {
+  font-size: .8rem; color: rgba(255,255,255,.45);
+  margin-bottom: 3rem; position: relative; z-index: 1;
+}
+.wel-q {
+  font-size: 1rem; font-weight: 600; color: rgba(255,255,255,.6);
+  margin-bottom: 1rem; position: relative; z-index: 1;
+}
+.role-btns { display: flex; flex-direction: column; gap: .75rem; width: 100%; max-width: 300px; position: relative; z-index: 1; }
+.role-btn {
+  background: rgba(255,255,255,.07);
+  border: 1.5px solid rgba(255,255,255,.12);
+  border-radius: var(--r-lg);
+  padding: 1.1rem 1.4rem;
+  display: flex; align-items: center; gap: 1rem;
+  transition: all .2s; text-align: left; width: 100%;
+}
+.role-btn:hover, .role-btn:active {
+  background: rgba(0,147,59,.25);
+  border-color: rgba(0,147,59,.6);
+  transform: scale(1.02);
+}
+.role-btn-ic {
+  width: 44px; height: 44px; border-radius: 12px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.4rem; flex-shrink: 0;
+}
+.role-btn-ic.g { background: rgba(0,147,59,.2); }
+.role-btn-ic.y { background: rgba(229,154,0,.2); }
+.role-btn-ic.b { background: rgba(59,130,246,.2); }
+.role-btn-txt { flex: 1; }
+.role-btn-name { font-size: .95rem; font-weight: 700; color: #fff; }
+.role-btn-sub  { font-size: .72rem; color: rgba(255,255,255,.4); margin-top: .1rem; }
+.role-btn-arr  { color: rgba(255,255,255,.25); font-size: 1.1rem; }
+
+.wel-demo {
+  margin-top: 2.5rem; padding: .7rem 1.2rem;
+  border: 1px solid rgba(255,255,255,.08);
+  border-radius: 30px; font-size: .72rem;
+  color: rgba(255,255,255,.3); position: relative; z-index: 1;
+  display: flex; align-items: center; gap: .5rem;
+}
+.mpesa-chip {
+  background: var(--g); color: #fff;
+  font-size: .62rem; font-weight: 800; letter-spacing: .5px;
+  padding: .15rem .5rem; border-radius: 4px;
+}
+
+/* ═══════════════ SHARED TOPBAR ═══════════════ */
+.topbar {
+  background: var(--card);
+  border-bottom: 1px solid var(--line);
+  height: 58px;
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0 1rem;
+  position: sticky; top: 0; z-index: 100;
+  flex-shrink: 0;
+}
+.tb-logo { font-size: 1.25rem; font-weight: 800; color: var(--navy); letter-spacing: -.5px; }
+.tb-logo span { color: var(--g); }
+.tb-right { display: flex; align-items: center; gap: .5rem; }
+.tb-btn {
+  width: 38px; height: 38px; border-radius: 50%;
+  background: var(--bg); border: 1px solid var(--line);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1rem; position: relative; transition: background .15s;
+}
+.tb-btn:hover { background: var(--gl); }
+.tb-dot {
+  position: absolute; top: 5px; right: 5px;
+  width: 8px; height: 8px; border-radius: 50%;
+  background: var(--red); border: 2px solid #fff;
+}
+.tb-av {
+  width: 38px; height: 38px; border-radius: 50%;
+  background: var(--gl); border: 2px solid var(--g);
+  display: flex; align-items: center; justify-content: center;
+  font-size: .75rem; font-weight: 800; color: var(--gd);
+}
+.tb-back {
+  background: none; color: var(--fog);
+  font-size: .82rem; font-weight: 600;
+  display: flex; align-items: center; gap: .3rem;
+  padding: .4rem .6rem; border-radius: 8px;
+  transition: color .15s;
+}
+.tb-back:hover { color: var(--g); }
+
+/* ═══════════════ SCROLLABLE BODY ═══════════════ */
+.body-scroll { flex: 1; overflow-y: auto; padding: 1rem; -webkit-overflow-scrolling: touch; }
+
+/* ═══════════════ BOTTOM TABS ═══════════════ */
+.tabbar {
+  background: var(--card);
+  border-top: 1px solid var(--line);
+  display: flex;
+  flex-shrink: 0;
+  position: sticky; bottom: 0; z-index: 100;
+}
+.tb-tab {
+  flex: 1; display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  padding: .55rem .3rem .45rem;
+  background: none; color: var(--fog);
+  transition: color .15s;
+  min-height: 56px;
+}
+.tb-tab .ti { font-size: 1.25rem; margin-bottom: .15rem; line-height: 1; }
+.tb-tab .tl { font-size: .6rem; font-weight: 700; letter-spacing: .3px; text-transform: uppercase; }
+.tb-tab.on { color: var(--g); }
+.tb-tab.on .ti { transform: scale(1.08); }
+
+/* ═══════════════ COMPONENTS ═══════════════ */
+
+/* Page header */
+.pg-hd { margin-bottom: 1.2rem; }
+.pg-hd-name { font-size: .8rem; color: var(--fog); }
+.pg-hd-title { font-size: 1.3rem; font-weight: 800; color: var(--navy); }
+
+/* Big green pay card */
+.pay-card {
+  background: linear-gradient(145deg, var(--gd), var(--g));
+  border-radius: var(--r-lg);
+  padding: 1.4rem;
+  color: #fff;
+  margin-bottom: 1rem;
+  position: relative; overflow: hidden;
+}
+.pay-card::after {
+  content: '💳';
+  position: absolute; right: -.5rem; bottom: -1rem;
+  font-size: 6rem; opacity: .06; pointer-events: none;
+}
+.pc-label { font-size: .68rem; text-transform: uppercase; letter-spacing: 2px; opacity: .65; margin-bottom: .3rem; }
+.pc-amount { font-size: 2.6rem; font-weight: 800; letter-spacing: -1.5px; line-height: 1; }
+.pc-sub    { font-size: .78rem; opacity: .6; margin-top: .35rem; }
+.pc-progress { margin-top: 1rem; }
+.pc-bar-track { height: 6px; background: rgba(255,255,255,.2); border-radius: 10px; overflow: hidden; }
+.pc-bar-fill  { height: 100%; border-radius: 10px; background: #fff; transition: width 1s ease; }
+.pc-bar-labels { display: flex; justify-content: space-between; font-size: .68rem; opacity: .55; margin-top: .3rem; }
+.pc-stats { display: flex; gap: .7rem; margin-top: 1rem; }
+.pc-stat  { flex: 1; background: rgba(255,255,255,.12); border-radius: 8px; padding: .65rem; }
+.pc-stat-v { font-size: 1.05rem; font-weight: 800; }
+.pc-stat-l { font-size: .62rem; opacity: .6; margin-top: .1rem; }
+
+/* Primary action button */
+.btn-pay {
+  width: 100%; padding: 1rem; border-radius: var(--r);
+  background: var(--g); color: #fff;
+  font-size: 1rem; font-weight: 800;
+  display: flex; align-items: center; justify-content: center; gap: .5rem;
+  transition: all .2s; margin-bottom: .75rem;
+  box-shadow: 0 4px 14px rgba(0,147,59,.35);
+}
+.btn-pay:hover { background: var(--gd); transform: translateY(-1px); }
+.btn-pay:active { transform: translateY(0); }
+.btn-pay:disabled { opacity: .5; cursor: not-allowed; transform: none; }
+
+.btn-outline {
+  width: 100%; padding: .85rem; border-radius: var(--r);
+  background: transparent; color: var(--g);
+  border: 2px solid var(--g);
+  font-size: .9rem; font-weight: 700;
+  transition: all .2s;
+}
+.btn-outline:hover { background: var(--gl); }
+
+/* Cards */
+.card {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: var(--r);
+  padding: 1rem;
+  box-shadow: var(--sh);
+  margin-bottom: .85rem;
+}
+.card-title {
+  font-size: .68rem; font-weight: 700;
+  text-transform: uppercase; letter-spacing: 1.5px;
+  color: var(--fog); margin-bottom: .85rem;
+}
+.sec-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: .75rem; }
+.sec-row h3 { font-size: .95rem; font-weight: 700; }
+.sec-row a  { font-size: .78rem; font-weight: 600; color: var(--g); cursor: pointer; }
+
+/* Stats 2-up */
+.stats2 { display: grid; grid-template-columns: 1fr 1fr; gap: .7rem; margin-bottom: .85rem; }
+.s2 { background: var(--card); border: 1px solid var(--line); border-radius: var(--r); padding: .9rem; box-shadow: var(--sh); }
+.s2-val { font-size: 1.45rem; font-weight: 800; line-height: 1; }
+.s2-lbl { font-size: .7rem; color: var(--fog); margin-top: .25rem; }
+.s2-ch  { font-size: .68rem; font-weight: 600; margin-top: .3rem; }
+
+/* Child selector — large touch targets */
+.child-card {
+  background: var(--card); border: 2px solid var(--line);
+  border-radius: var(--r-lg); padding: 1rem 1.1rem;
+  display: flex; align-items: center; gap: .9rem;
+  margin-bottom: .7rem; cursor: pointer; transition: all .2s;
+}
+.child-card:hover, .child-card.selected {
+  border-color: var(--g); background: var(--gxl);
+}
+.child-av {
+  width: 48px; height: 48px; border-radius: 14px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1rem; font-weight: 800; flex-shrink: 0;
+}
+.child-info { flex: 1; }
+.child-name { font-size: .97rem; font-weight: 700; }
+.child-meta { font-size: .74rem; color: var(--fog); margin-top: .1rem; }
+.child-right { text-align: right; flex-shrink: 0; }
+.child-bal { font-size: .97rem; font-weight: 800; }
+.child-bal.owed { color: var(--red); }
+.child-bal.ok   { color: var(--g); }
+
+/* Row items */
+.row { display: flex; align-items: center; gap: .75rem; padding: .8rem 0; border-bottom: 1px solid var(--line); }
+.row:last-child { border-bottom: none; }
+.row-av { width: 40px; height: 40px; border-radius: 50%; background: var(--gl); display: flex; align-items: center; justify-content: center; font-size: .8rem; font-weight: 800; color: var(--gd); flex-shrink: 0; }
+.row-info { flex: 1; min-width: 0; }
+.row-name { font-size: .88rem; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.row-sub  { font-size: .7rem; color: var(--fog); margin-top: .1rem; }
+.row-right { text-align: right; flex-shrink: 0; }
+.row-val { font-size: .88rem; font-weight: 700; }
+.row-val.r { color: var(--red); }
+.row-val.g { color: var(--g); }
+
+/* Transaction row */
+.txn { display: flex; align-items: center; gap: .75rem; padding: .72rem 0; border-bottom: 1px solid var(--line); }
+.txn:last-child { border-bottom: none; }
+.txn-ic { width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: .88rem; flex-shrink: 0; }
+.txn-ic.in  { background: var(--gl); }
+.txn-ic.out { background: var(--rl); }
+.txn-body { flex: 1; min-width: 0; }
+.txn-name { font-size: .85rem; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.txn-when { font-size: .68rem; color: var(--fog); margin-top: .1rem; font-variant-numeric: tabular-nums; }
+.txn-amt  { font-size: .88rem; font-weight: 700; flex-shrink: 0; }
+.txn-amt.in  { color: var(--gd); }
+.txn-amt.out { color: var(--red); }
+
+/* Badge */
+.bdg { display: inline-flex; align-items: center; gap: .2rem; font-size: .67rem; font-weight: 700; padding: .2rem .6rem; border-radius: 20px; }
+.bdg.paid    { background: var(--gl); color: var(--gd); }
+.bdg.part    { background: #EFF6FF; color: #1D4ED8; }
+.bdg.late    { background: var(--rl); color: var(--red); }
+.bdg.pending { background: var(--yl); color: #78350F; }
+
+/* Progress bar */
+.prog { margin-top: .5rem; }
+.prog-track { height: 7px; background: var(--line); border-radius: 10px; overflow: hidden; }
+.prog-fill  { height: 100%; border-radius: 10px; background: linear-gradient(90deg, var(--gd), var(--g)); transition: width 1s ease; }
+.prog-fill.low { background: linear-gradient(90deg, var(--red), #E87070); }
+.prog-lbls  { display: flex; justify-content: space-between; font-size: .68rem; color: var(--fog); margin-top: .25rem; }
+
+/* Alert */
+.alert { display: flex; gap: .65rem; padding: .85rem .9rem; border-radius: 10px; margin-bottom: .85rem; font-size: .8rem; line-height: 1.55; }
+.alert .ai { font-size: 1rem; flex-shrink: 0; margin-top: 1px; }
+.alert.warn  { background: var(--yl);  border: 1px solid #F5D687; color: #7A4F00; }
+.alert.info  { background: #EFF6FF;    border: 1px solid #BFDBFE; color: #1E3A8A; }
+.alert.good  { background: var(--gl);  border: 1px solid #A3D4B8; color: var(--gd); }
+.alert.bad   { background: var(--rl);  border: 1px solid #FBCACA; color: #7A0000; }
+
+/* Fee table */
+.ftbl { width: 100%; border-collapse: collapse; font-size: .83rem; }
+.ftbl th { font-size: .65rem; text-transform: uppercase; letter-spacing: 1px; color: var(--fog); font-weight: 600; padding: .4rem 0; border-bottom: 1px solid var(--line); text-align: left; }
+.ftbl td { padding: .65rem 0; border-bottom: 1px solid var(--line); vertical-align: middle; }
+.ftbl tr:last-child td { border-bottom: none; }
+.ftbl .tf td { font-weight: 800; }
+
+/* Term pill tabs */
+.pills { display: flex; gap: .4rem; margin-bottom: .9rem; overflow-x: auto; padding-bottom: .1rem; }
+.pill { padding: .45rem 1rem; border-radius: 20px; font-size: .76rem; font-weight: 600; border: 1.5px solid var(--line); background: var(--card); cursor: pointer; white-space: nowrap; color: var(--fog); transition: all .15s; }
+.pill.on { background: var(--navy); border-color: var(--navy); color: #fff; }
+
+/* Receipt */
+.rcpt { background: #fff; border: 1.5px dashed var(--line); border-radius: var(--r); padding: 1.1rem; margin-bottom: .85rem; }
+.rcpt-head { font-size: 1.1rem; font-weight: 800; color: var(--gd); text-align: center; }
+.rcpt-sub  { font-size: .65rem; color: var(--fog); text-align: center; margin-bottom: .6rem; }
+.rcpt-div  { border: none; border-top: 1px dashed var(--line); margin: .6rem 0; }
+.rcpt-row  { display: flex; justify-content: space-between; font-size: .8rem; padding: .2rem 0; }
+.rcpt-row.tt { font-weight: 800; font-size: .9rem; color: var(--gd); }
+.rcpt-ref  { font-family: 'Courier New', monospace; font-weight: 700; font-size: .95rem; letter-spacing: 2px; color: var(--gd); }
+.rcpt-note { text-align: center; font-size: .65rem; color: var(--fog); }
+
+/* Notif */
+.notif-row { display: flex; gap: .7rem; padding: .85rem 0; border-bottom: 1px solid var(--line); }
+.notif-row:last-child { border-bottom: none; }
+.ndot { width: 9px; height: 9px; border-radius: 50%; background: var(--g); flex-shrink: 0; margin-top: 4px; }
+.ndot.read { background: var(--line); }
+.ni-title { font-size: .85rem; font-weight: 600; margin-bottom: .15rem; }
+.ni-body  { font-size: .73rem; color: var(--fog); line-height: 1.45; }
+.ni-time  { font-size: .67rem; color: var(--fog); margin-top: .2rem; }
+
+/* School header bar */
+.sch-bar {
+  background: linear-gradient(135deg, var(--navy), #1a3a6a);
+  border-radius: var(--r); padding: 1.1rem;
+  color: #fff; margin-bottom: .85rem;
+}
+.sch-name { font-size: 1rem; font-weight: 800; }
+.sch-code { font-size: .7rem; opacity: .4; letter-spacing: 1.5px; margin-top: .15rem; font-variant-numeric: tabular-nums; }
+.sch-chips { display: flex; gap: .4rem; margin-top: .7rem; flex-wrap: wrap; }
+.sch-chip { background: rgba(255,255,255,.1); border: 1px solid rgba(255,255,255,.1); border-radius: 5px; padding: .2rem .55rem; font-size: .68rem; color: rgba(255,255,255,.6); }
+
+/* Revenue pill */
+.rev-pill {
+  background: linear-gradient(90deg, #0F2744, #1a3a6a);
+  border-radius: var(--r); padding: 1rem;
+  display: flex; align-items: center; gap: .85rem;
+  color: #fff; margin-bottom: .85rem;
+}
+.rev-ic  { font-size: 1.6rem; flex-shrink: 0; }
+.rev-val { font-size: 1.2rem; font-weight: 800; }
+.rev-lbl { font-size: .7rem; opacity: .5; margin-top: .1rem; }
+
+/* ═══════════════ ② M-PESA MODAL ═══════════════ */
+.overlay {
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,.6);
+  z-index: 500; display: none;
+  align-items: flex-end; justify-content: center;
+  backdrop-filter: blur(4px);
+}
+.overlay.on { display: flex; }
+.sheet {
+  background: var(--card); border-radius: 20px 20px 0 0;
+  width: 100%; padding: 1.2rem 1.2rem 2rem;
+  animation: shUp .32s cubic-bezier(.32,1.15,.64,1);
+  max-height: 92vh; overflow-y: auto;
+}
+@keyframes shUp { from { transform: translateY(100%); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+.handle { width: 36px; height: 4px; background: var(--line); border-radius: 10px; margin: 0 auto 1rem; }
+.sh-title { font-size: 1.15rem; font-weight: 800; margin-bottom: .25rem; }
+.sh-sub   { font-size: .8rem; color: var(--fog); margin-bottom: 1.1rem; }
+
+.mpesa-top {
+  background: var(--g); border-radius: var(--r);
+  padding: .85rem 1rem;
+  display: flex; align-items: center; gap: .8rem;
+  margin-bottom: 1rem; color: #fff;
+}
+.mp-brand { font-size: 1.1rem; font-weight: 800; letter-spacing: .5px; }
+.mp-brand-sub { font-size: .7rem; opacity: .75; }
+
+.amount-hero {
+  background: var(--gxl); border: 2px solid var(--gl);
+  border-radius: var(--r); padding: 1rem; text-align: center; margin-bottom: 1rem;
+}
+.ah-lbl { font-size: .72rem; color: var(--fog); margin-bottom: .2rem; }
+.ah-val { font-size: 2.2rem; font-weight: 800; color: var(--gd); letter-spacing: -1px; line-height: 1; }
+.ah-fee { font-size: .72rem; color: var(--fog); margin-top: .3rem; }
+
+/* Phone input */
+.phone-wrap {
+  display: flex; border: 2px solid var(--line);
+  border-radius: var(--r); overflow: hidden; margin-bottom: .9rem;
+  transition: border-color .15s;
+}
+.phone-wrap:focus-within { border-color: var(--g); }
+.phone-pre {
+  background: var(--bg); padding: .75rem .8rem;
+  font-size: .85rem; font-weight: 700; color: var(--fog);
+  border-right: 2px solid var(--line);
+  display: flex; align-items: center; gap: .4rem;
+  white-space: nowrap;
+}
+.phone-wrap input {
+  flex: 1; padding: .75rem .9rem; border: none;
+  font-size: 1.05rem; font-weight: 600; color: var(--ink);
+  background: var(--card); letter-spacing: .5px;
+}
+.phone-wrap.err { border-color: var(--red); }
+.err-msg { font-size: .74rem; color: var(--red); margin: -.5rem 0 .7rem; }
+
+.fg { margin-bottom: .85rem; }
+.fl { font-size: .78rem; font-weight: 700; color: var(--mid); display: block; margin-bottom: .35rem; }
+.fi { width: 100%; padding: .75rem .9rem; border: 2px solid var(--line); border-radius: var(--r); font-size: .9rem; color: var(--ink); transition: border-color .15s; background: var(--card); }
+.fi:focus { border-color: var(--g); }
+.fsel { width: 100%; padding: .75rem .9rem; border: 2px solid var(--line); border-radius: var(--r); font-size: .9rem; color: var(--ink); background: var(--card); }
+
+/* Processing */
+.proc { text-align: center; padding: 1.5rem 0; }
+.proc-emoji { font-size: 3.5rem; display: block; margin-bottom: .8rem; animation: phPulse 1.1s ease-in-out infinite; }
+@keyframes phPulse { 0%,100%{transform:scale(1)} 50%{transform:scale(1.1)} }
+.proc-title { font-size: 1rem; font-weight: 700; margin-bottom: .4rem; }
+.proc-sub { font-size: .83rem; color: var(--fog); line-height: 1.6; margin-bottom: 1rem; }
+.dots { display: flex; justify-content: center; gap: .4rem; }
+.dot { width: 9px; height: 9px; border-radius: 50%; background: var(--g); animation: dotB .85s ease-in-out infinite; }
+.dot:nth-child(2){animation-delay:.15s} .dot:nth-child(3){animation-delay:.3s}
+@keyframes dotB { 0%,100%{transform:translateY(0);opacity:.4} 50%{transform:translateY(-7px);opacity:1} }
+
+/* Success */
+.succ { text-align: center; padding: .5rem 0; }
+.succ-ring {
+  width: 76px; height: 76px; border-radius: 50%; background: var(--g);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 2.2rem; color: #fff; margin: 0 auto .9rem;
+  animation: ringPop .45s cubic-bezier(.34,1.56,.64,1);
+}
+@keyframes ringPop { from{transform:scale(0)} to{transform:scale(1)} }
+.succ-title { font-size: 1.3rem; font-weight: 800; margin-bottom: .3rem; }
+.succ-sub   { font-size: .82rem; color: var(--fog); line-height: 1.6; margin-bottom: .9rem; }
+.ref-box { background: var(--gxl); border: 1px solid var(--gl); border-radius: var(--r); padding: .75rem; margin-bottom: .85rem; }
+.ref-lbl { font-size: .68rem; color: var(--fog); text-align: center; }
+.ref-val { font-family: 'Courier New', monospace; font-size: 1.2rem; font-weight: 800; color: var(--gd); text-align: center; letter-spacing: 3px; }
+
+.sh-cancel { display: block; width: 100%; text-align: center; font-size: .8rem; color: var(--fog); background: none; margin-top: .8rem; text-decoration: underline; }
+
+/* ═══════════════ EMPTY STATE ═══════════════ */
+.empty { text-align: center; padding: 3rem 1rem; color: var(--fog); }
+.empty-icon { font-size: 3rem; margin-bottom: .7rem; }
+.empty-text { font-size: .88rem; line-height: 1.6; }
+</style>
+</head>
+<body>
+
+<!-- TOAST -->
+<div id="toast"></div>
+
+<!-- ════════════════════════════════
+     ① WELCOME
+════════════════════════════════ -->
+<div id="welcome" class="scr on">
+  <div class="wel-logo">Elimu<span>Pay</span></div>
+  <div class="wel-tag">Lipa ada shuleni kwa urahisi · Pay school fees easily</div>
+
+  <div class="wel-q">Wewe ni nani? / Who are you?</div>
+
+  <div class="role-btns">
+    <button class="role-btn" onclick="go('school')">
+      <div class="role-btn-ic g">🏫</div>
+      <div class="role-btn-txt">
+        <div class="role-btn-name">School / Shule</div>
+        <div class="role-btn-sub">Manage students & fees</div>
+      </div>
+      <div class="role-btn-arr">›</div>
+    </button>
+
+    <button class="role-btn" onclick="go('parent')">
+      <div class="role-btn-ic y">👨‍👩‍👧</div>
+      <div class="role-btn-txt">
+        <div class="role-btn-name">Mzazi / Parent</div>
+        <div class="role-btn-sub">Pay and track your child's fees</div>
+      </div>
+      <div class="role-btn-arr">›</div>
+    </button>
+
+    <button class="role-btn" onclick="go('student')">
+      <div class="role-btn-ic b">🎓</div>
+      <div class="role-btn-txt">
+        <div class="role-btn-name">Mwanafunzi / Student</div>
+        <div class="role-btn-sub">View your fee balance</div>
+      </div>
+      <div class="role-btn-arr">›</div>
+    </button>
+  </div>
+
+  <div class="wel-demo">
+    <span class="mpesa-chip">M-PESA</span>
+    Powered by Safaricom · Kenya 🇰🇪
+  </div>
+</div>
+
+<!-- ════════════════════════════════
+     ② SCHOOL APP
+════════════════════════════════ -->
+<div id="school" class="scr">
+  <div class="topbar">
+    <button class="tb-back" onclick="go('welcome')">← Rudi</button>
+    <div class="tb-logo">Elimu<span>Pay</span></div>
+    <div class="tb-right">
+      <button class="tb-btn" onclick="showPg('school','s-notifs')" title="Notifications">🔔<div class="tb-dot"></div></button>
+      <div class="tb-av">KH</div>
+    </div>
+  </div>
+
+  <div class="body-scroll" id="school-body">
+
+    <!-- S: Dashboard -->
+    <div id="s-dash" class="s-pg">
+      <div class="sch-bar">
+        <div class="sch-name">Nairobi Greenfields Academy</div>
+        <div class="sch-code">SCH · 2024 · KE · 0047</div>
+        <div class="sch-chips">
+          <div class="sch-chip">Pro Plan</div>
+          <div class="sch-chip">Term 2 · 2025</div>
+          <div class="sch-chip">312 Wanafunzi</div>
+        </div>
+      </div>
+
+      <div class="stats2">
+        <div class="s2"><div class="s2-val" style="color:var(--gd)">2.4M</div><div class="s2-lbl">Imekusanywa (KES)</div><div class="s2-ch" style="color:var(--g)">↑ 12% Term 1</div></div>
+        <div class="s2"><div class="s2-val" style="color:var(--red)">840K</div><div class="s2-lbl">Bado haijalipiwa</div><div class="s2-ch" style="color:var(--fog)">Wanafunzi 48</div></div>
+        <div class="s2"><div class="s2-val">85%</div><div class="s2-lbl">Kiwango cha ukusanyaji</div><div class="s2-ch" style="color:var(--g)">↑ kutoka 78%</div></div>
+        <div class="s2"><div class="s2-val">264</div><div class="s2-lbl">Wamelipa kikamilifu</div><div class="s2-ch" style="color:var(--fog)">48 partial/late</div></div>
+      </div>
+
+      <div class="rev-pill">
+        <div class="rev-ic">💰</div>
+        <div>
+          <div class="rev-val">KES 36,000</div>
+          <div class="rev-lbl">Your ElimuPay income this month</div>
+        </div>
+      </div>
+
+      <div class="alert warn"><div class="ai">⚠️</div><div>Wanafunzi <strong>12</strong> wana malimbikizo ya siku 30+. Tuma ukumbusho wa SMS kwa wazazi.</div></div>
+
+      <div class="sec-row"><h3>Malipo ya Hivi Karibuni</h3><a onclick="showPg('school','s-payments')">Ona Yote</a></div>
+      <div class="card" style="padding:.2rem 1rem">
+        <div class="txn"><div class="txn-ic in">💚</div><div class="txn-body"><div class="txn-name">Wanjiku Kamau — Form 3A</div><div class="txn-when">Leo 9:42 AM · M-Pesa · QJK7B2P</div></div><div class="txn-amt in">+12,000</div></div>
+        <div class="txn"><div class="txn-ic in">💚</div><div class="txn-body"><div class="txn-name">Brian Ochieng — Form 1B</div><div class="txn-when">Leo 8:15 AM · M-Pesa · QPL3KM2</div></div><div class="txn-amt in">+8,500</div></div>
+        <div class="txn"><div class="txn-ic in">💚</div><div class="txn-body"><div class="txn-name">Aisha Mwangi — Form 2C</div><div class="txn-when">Jana 3:30 PM · Bank</div></div><div class="txn-amt in">+15,000</div></div>
+        <div class="txn"><div class="txn-ic in">💚</div><div class="txn-body"><div class="txn-name">Kipchoge Rotich — Form 4A</div><div class="txn-when">Jana 11:00 AM · M-Pesa</div></div><div class="txn-amt in">+20,000</div></div>
+      </div>
+
+      <div class="sec-row"><h3>Waliochelewa</h3><a onclick="showPg('school','s-students')">Wote</a></div>
+      <div class="card" style="padding:.2rem 1rem">
+        <div class="row"><div class="row-av">JM</div><div class="row-info"><div class="row-name">John Mutua</div><div class="row-sub">Form 2B · Adm 2022/0041</div></div><div class="row-right"><div class="row-val r">−18,500</div><span class="bdg late">Siku 45</span></div></div>
+        <div class="row"><div class="row-av">FN</div><div class="row-info"><div class="row-name">Faith Njeri</div><div class="row-sub">Form 1A · Adm 2023/0018</div></div><div class="row-right"><div class="row-val r">−9,000</div><span class="bdg pending">Siku 31</span></div></div>
+        <div class="row"><div class="row-av">DK</div><div class="row-info"><div class="row-name">David Kiprop</div><div class="row-sub">Form 3C · Adm 2021/0093</div></div><div class="row-right"><div class="row-val r">−22,000</div><span class="bdg late">Siku 60</span></div></div>
+      </div>
+    </div>
+
+    <!-- S: Students -->
+    <div id="s-students" class="s-pg" style="display:none">
+      <div class="pills"><div class="pill on">Wote (312)</div><div class="pill">Wamelipa (264)</div><div class="pill">Partial (28)</div><div class="pill">Waliosalia (20)</div></div>
+      <div class="card" style="padding:.2rem 1rem">
+        <div class="row"><div class="row-av">WK</div><div class="row-info"><div class="row-name">Wanjiku Kamau</div><div class="row-sub">Form 3A</div><div class="prog"><div class="prog-track"><div class="prog-fill" style="width:100%"></div></div><div class="prog-lbls"><span>22,000 / 22,000</span><span>100%</span></div></div></div><div class="row-right"><span class="bdg paid">✓</span></div></div>
+        <div class="row"><div class="row-av">BO</div><div class="row-info"><div class="row-name">Brian Ochieng</div><div class="row-sub">Form 1B</div><div class="prog"><div class="prog-track"><div class="prog-fill" style="width:72%"></div></div><div class="prog-lbls"><span>13,000 / 18,000</span><span>72%</span></div></div></div><div class="row-right"><span class="bdg part">72%</span></div></div>
+        <div class="row"><div class="row-av">JM</div><div class="row-info"><div class="row-name">John Mutua</div><div class="row-sub">Form 2B</div><div class="prog"><div class="prog-track"><div class="prog-fill low" style="width:8%"></div></div><div class="prog-lbls"><span>1,500 / 20,000</span><span>8%</span></div></div></div><div class="row-right"><span class="bdg late">8%</span></div></div>
+        <div class="row"><div class="row-av">AM</div><div class="row-info"><div class="row-name">Aisha Mwangi</div><div class="row-sub">Form 2C</div><div class="prog"><div class="prog-track"><div class="prog-fill" style="width:100%"></div></div><div class="prog-lbls"><span>22,000 / 22,000</span><span>100%</span></div></div></div><div class="row-right"><span class="bdg paid">✓</span></div></div>
+        <div class="row"><div class="row-av">GW</div><div class="row-info"><div class="row-name">Grace Wambua</div><div class="row-sub">Form 4B</div><div class="prog"><div class="prog-track"><div class="prog-fill" style="width:80%"></div></div><div class="prog-lbls"><span>20,000 / 25,000</span><span>80%</span></div></div></div><div class="row-right"><span class="bdg part">80%</span></div></div>
+      </div>
+    </div>
+
+    <!-- S: Payments -->
+    <div id="s-payments" class="s-pg" style="display:none">
+      <div class="pills"><div class="pill on">Term 2, 2025</div><div class="pill">Term 1, 2025</div><div class="pill">Term 3, 2024</div></div>
+      <div class="stats2">
+        <div class="s2"><div class="s2-val" style="color:var(--gd)">2.4M</div><div class="s2-lbl">Jumla (KES)</div></div>
+        <div class="s2"><div class="s2-val">186</div><div class="s2-lbl">Transactions</div></div>
+      </div>
+      <div class="card" style="padding:.2rem 1rem">
+        <div class="txn"><div class="txn-ic in">💚</div><div class="txn-body"><div class="txn-name">Wanjiku Kamau — F3A</div><div class="txn-when">15 Jun · M-Pesa · QJK7B2P</div></div><div class="txn-amt in">+12,000</div></div>
+        <div class="txn"><div class="txn-ic in">💚</div><div class="txn-body"><div class="txn-name">Brian Ochieng — F1B</div><div class="txn-when">15 Jun · M-Pesa · QPL3KM2</div></div><div class="txn-amt in">+8,500</div></div>
+        <div class="txn"><div class="txn-ic in">💚</div><div class="txn-body"><div class="txn-name">Aisha Mwangi — F2C</div><div class="txn-when">14 Jun · Bank</div></div><div class="txn-amt in">+15,000</div></div>
+        <div class="txn"><div class="txn-ic in">💚</div><div class="txn-body"><div class="txn-name">Kipchoge Rotich — F4A</div><div class="txn-when">14 Jun · M-Pesa · QMN5RT9</div></div><div class="txn-amt in">+20,000</div></div>
+        <div class="txn"><div class="txn-ic in">💚</div><div class="txn-body"><div class="txn-name">Faith Njeri — F1A</div><div class="txn-when">12 Jun · M-Pesa · QBV2XP1</div></div><div class="txn-amt in">+9,000</div></div>
+      </div>
+    </div>
+
+    <!-- S: Reports -->
+    <div id="s-reports" class="s-pg" style="display:none">
+      <div class="card">
+        <div class="card-title">Ada za Muhula 2, 2025</div>
+        <table class="ftbl">
+          <tr><th>Darasa</th><th>Masomo</th><th>Bweni</th><th>Jumla</th></tr>
+          <tr><td>Form 1</td><td>8,000</td><td>10,000</td><td><strong>18,000</strong></td></tr>
+          <tr><td>Form 2</td><td>8,500</td><td>11,500</td><td><strong>20,000</strong></td></tr>
+          <tr><td>Form 3</td><td>9,000</td><td>13,000</td><td><strong>22,000</strong></td></tr>
+          <tr><td>Form 4</td><td>10,000</td><td>15,000</td><td><strong>25,000</strong></td></tr>
+        </table>
+      </div>
+      <div class="card">
+        <div class="card-title">Ukusanyaji kwa Darasa</div>
+        <div style="margin-bottom:.9rem"><div style="font-size:.85rem;font-weight:700;margin-bottom:.3rem">Form 1 (78)</div><div class="prog-track"><div class="prog-fill" style="width:88%"></div></div><div class="prog-lbls"><span>634K / 721K</span><span>88%</span></div></div>
+        <div style="margin-bottom:.9rem"><div style="font-size:.85rem;font-weight:700;margin-bottom:.3rem">Form 2 (82)</div><div class="prog-track"><div class="prog-fill" style="width:79%"></div></div><div class="prog-lbls"><span>649K / 820K</span><span>79%</span></div></div>
+        <div style="margin-bottom:.9rem"><div style="font-size:.85rem;font-weight:700;margin-bottom:.3rem">Form 3 (80)</div><div class="prog-track"><div class="prog-fill" style="width:91%"></div></div><div class="prog-lbls"><span>801K / 880K</span><span>91%</span></div></div>
+        <div><div style="font-size:.85rem;font-weight:700;margin-bottom:.3rem">Form 4 (72)</div><div class="prog-track"><div class="prog-fill" style="width:83%"></div></div><div class="prog-lbls"><span>1.49M / 1.8M</span><span>83%</span></div></div>
+      </div>
+    </div>
+
+    <!-- S: Notifs -->
+    <div id="s-notifs" class="s-pg" style="display:none">
+      <div class="card" style="padding:.2rem 1rem">
+        <div class="notif-row"><div class="ndot"></div><div><div class="ni-title">Malipo Yamepokelewa — Brian Ochieng</div><div class="ni-body">KES 8,500 via M-Pesa · QPL3KM2</div><div class="ni-time">Dakika 2 zilizopita</div></div></div>
+        <div class="notif-row"><div class="ndot"></div><div><div class="ni-title">Onyo — John Mutua (F2B)</div><div class="ni-body">KES 18,500 zimechelewa siku 45</div><div class="ni-time">Saa 1 iliyopita</div></div></div>
+        <div class="notif-row"><div class="ndot read"></div><div><div class="ni-title">Tarehe ya Mwisho Inakaribia</div><div class="ni-body">Wanafunzi 48 hawajalipia — siku 14 zimesalia</div><div class="ni-time">Jana</div></div></div>
+        <div class="notif-row"><div class="ndot read"></div><div><div class="ni-title">Malipo — Wanjiku Kamau</div><div class="ni-body">KES 12,000 — Amelipa kikamilifu</div><div class="ni-time">Leo 9:42 AM</div></div></div>
+      </div>
+    </div>
+
+  </div><!-- /school-body -->
+
+  <div class="tabbar" id="school-tabs">
+    <button class="tb-tab on" onclick="showPg('school','s-dash')"><div class="ti">🏠</div><div class="tl">Nyumbani</div></button>
+    <button class="tb-tab" onclick="showPg('school','s-students')"><div class="ti">👥</div><div class="tl">Wanafunzi</div></button>
+    <button class="tb-tab" onclick="showPg('school','s-payments')"><div class="ti">💳</div><div class="tl">Malipo</div></button>
+    <button class="tb-tab" onclick="showPg('school','s-reports')"><div class="ti">📊</div><div class="tl">Ripoti</div></button>
+    <button class="tb-tab" onclick="showPg('school','s-notifs')"><div class="ti">🔔</div><div class="tl">Arifa</div></button>
+  </div>
+</div>
+
+<!-- ════════════════════════════════
+     ③ PARENT APP
+════════════════════════════════ -->
+<div id="parent" class="scr">
+  <div class="topbar">
+    <button class="tb-back" onclick="go('welcome')">← Rudi</button>
+    <div class="tb-logo">Elimu<span>Pay</span></div>
+    <div class="tb-right">
+      <button class="tb-btn" onclick="showPg('parent','p-notifs')">🔔<div class="tb-dot"></div></button>
+      <div class="tb-av">MW</div>
+    </div>
+  </div>
+
+  <div class="body-scroll" id="parent-body">
+
+    <!-- P: Home — biggest action first -->
+    <div id="p-home" class="p-pg">
+      <div class="pg-hd">
+        <div class="pg-hd-name">Habari asubuhi,</div>
+        <div class="pg-hd-title">Mary Waweru 👋</div>
+      </div>
+
+      <!-- THE MAIN ACTION: pay now — above the fold, can't miss it -->
+      <div class="pay-card">
+        <div class="pc-label">Salio — James Waweru</div>
+        <div class="pc-amount">KES 5,000</div>
+        <div class="pc-sub">Form 1B · Muhula 2, 2025 · Tarehe: Jun 30</div>
+        <div class="pc-progress">
+          <div class="pc-bar-track"><div class="pc-bar-fill" style="width:72%"></div></div>
+          <div class="pc-bar-labels"><span>13,000 imelipwa</span><span>72% ✓</span></div>
+        </div>
+        <div class="pc-stats">
+          <div class="pc-stat"><div class="pc-stat-v">13,000</div><div class="pc-stat-l">Imelipwa</div></div>
+          <div class="pc-stat"><div class="pc-stat-v">5,000</div><div class="pc-stat-l">Inayobaki</div></div>
+          <div class="pc-stat"><div class="pc-stat-v">Jun 30</div><div class="pc-stat-l">Mwisho</div></div>
+        </div>
+      </div>
+
+      <button class="btn-pay" onclick="openMpesa('James Waweru','Form 1B',5000)">
+        💚 Lipa KES 5,000 kwa M-Pesa
+      </button>
+
+      <!-- Child selector -->
+      <div class="sec-row" style="margin-bottom:.6rem"><h3>Watoto Wangu</h3></div>
+      <div class="child-card selected" onclick="selectChild('James',5000)">
+        <div class="child-av" style="background:#FEF3C7;color:#92400E">JW</div>
+        <div class="child-info">
+          <div class="child-name">James Waweru</div>
+          <div class="child-meta">Form 1B · Nairobi Greenfields</div>
+          <div class="prog" style="margin-top:.4rem"><div class="prog-track"><div class="prog-fill" style="width:72%"></div></div></div>
+        </div>
+        <div class="child-right">
+          <div class="child-bal owed">−5,000</div>
+          <span class="bdg part">72%</span>
+        </div>
+      </div>
+      <div class="child-card" onclick="selectChild('Sarah',0)">
+        <div class="child-av" style="background:#FCE7F3;color:#9D174D">SW</div>
+        <div class="child-info">
+          <div class="child-name">Sarah Waweru</div>
+          <div class="child-meta">Form 3A · Nairobi Greenfields</div>
+        </div>
+        <div class="child-right">
+          <div class="child-bal ok">✓ Imelipwa</div>
+          <span class="bdg paid">100%</span>
+        </div>
+      </div>
+
+      <div class="alert warn" style="margin-top:.5rem"><div class="ai">📅</div><div>Ukumbusho: Salio la James ya KES 5,000 linalipwa Juni 30. Malimbikizo yatafuatiwa na faini ya KES 500.</div></div>
+
+      <div class="sec-row"><h3>Malipo ya Hivi Karibuni</h3><a onclick="showPg('parent','p-receipts')">Risiti</a></div>
+      <div class="card" style="padding:.2rem 1rem">
+        <div class="txn"><div class="txn-ic out">💳</div><div class="txn-body"><div class="txn-name">James Waweru — Muhula 2</div><div class="txn-when">5 Jun · M-Pesa · QJF4TR7</div></div><div class="txn-amt out">8,500</div></div>
+        <div class="txn"><div class="txn-ic out">💳</div><div class="txn-body"><div class="txn-name">Sarah Waweru — Muhula 2</div><div class="txn-when">2 Jun · M-Pesa · QAB2KP9</div></div><div class="txn-amt out">22,000</div></div>
+        <div class="txn"><div class="txn-ic out">💳</div><div class="txn-body"><div class="txn-name">James Waweru — Muhula 2</div><div class="txn-when">1 Jun · M-Pesa · QNM3VX5</div></div><div class="txn-amt out">4,500</div></div>
+      </div>
+    </div>
+
+    <!-- P: Statement -->
+    <div id="p-statement" class="p-pg" style="display:none">
+      <div class="pills"><div class="pill on">James — Form 1B</div><div class="pill">Sarah — Form 3A</div></div>
+      <div class="card">
+        <div class="card-title">Muhtasari wa Ada — Muhula 2, 2025</div>
+        <table class="ftbl">
+          <tr><th>Aina</th><th>Kiasi</th><th>Hali</th></tr>
+          <tr><td>Masomo</td><td>8,000</td><td><span class="bdg paid">✓</span></td></tr>
+          <tr><td>Bweni</td><td>7,000</td><td><span class="bdg paid">✓</span></td></tr>
+          <tr><td>Shughuli</td><td>1,500</td><td><span class="bdg paid">✓</span></td></tr>
+          <tr><td>Maktaba</td><td>500</td><td><span class="bdg pending">Bado</span></td></tr>
+          <tr><td>Michezo</td><td>1,000</td><td><span class="bdg pending">Bado</span></td></tr>
+          <tr class="tf"><td><strong>Jumla</strong></td><td><strong>18,000</strong></td><td><span class="bdg part">72%</span></td></tr>
+        </table>
+        <div class="prog" style="margin-top:.9rem"><div class="prog-track"><div class="prog-fill" style="width:72%"></div></div><div class="prog-lbls"><span>Imelipwa: 13,000</span><span>Inayobaki: 5,000</span></div></div>
+      </div>
+      <button class="btn-pay" onclick="openMpesa('James Waweru','Form 1B',5000)">💚 Lipa KES 5,000 Inayobaki</button>
+    </div>
+
+    <!-- P: Receipts -->
+    <div id="p-receipts" class="p-pg" style="display:none">
+      <div class="rcpt">
+        <div class="rcpt-head">ElimuPay</div>
+        <div class="rcpt-sub">RISITI YA MALIPO RASMI</div>
+        <hr class="rcpt-div">
+        <div class="rcpt-row"><span>Shule</span><span>Nairobi Greenfields</span></div>
+        <div class="rcpt-row"><span>Mwanafunzi</span><span>James Waweru</span></div>
+        <div class="rcpt-row"><span>Nambari ya Kujisajili</span><span>2023/0041</span></div>
+        <div class="rcpt-row"><span>Darasa</span><span>Form 1B · Muhula 2</span></div>
+        <div class="rcpt-row"><span>Njia</span><span>M-Pesa</span></div>
+        <div class="rcpt-row"><span>Nambari ya Mpesa</span><span class="rcpt-ref">QJF4TR7</span></div>
+        <div class="rcpt-row"><span>Tarehe</span><span>5 Jun 2025, 10:23</span></div>
+        <hr class="rcpt-div">
+        <div class="rcpt-row tt"><span>Kiasi</span><span>KES 8,500</span></div>
+        <hr class="rcpt-div">
+        <div class="rcpt-note">Risiti rasmi ya ElimuPay · Maswali: Bursar wa Shule</div>
+      </div>
+      <div class="rcpt">
+        <div class="rcpt-head">ElimuPay</div>
+        <div class="rcpt-sub">RISITI YA MALIPO RASMI</div>
+        <hr class="rcpt-div">
+        <div class="rcpt-row"><span>Shule</span><span>Nairobi Greenfields</span></div>
+        <div class="rcpt-row"><span>Mwanafunzi</span><span>Sarah Waweru</span></div>
+        <div class="rcpt-row"><span>Darasa</span><span>Form 3A · Muhula 2</span></div>
+        <div class="rcpt-row"><span>Njia</span><span>M-Pesa</span></div>
+        <div class="rcpt-row"><span>Nambari ya Mpesa</span><span class="rcpt-ref">QAB2KP9</span></div>
+        <div class="rcpt-row"><span>Tarehe</span><span>2 Jun 2025, 14:15</span></div>
+        <hr class="rcpt-div">
+        <div class="rcpt-row tt"><span>Kiasi</span><span>KES 22,000</span></div>
+        <hr class="rcpt-div">
+        <div class="rcpt-note">Risiti rasmi ya ElimuPay</div>
+      </div>
+    </div>
+
+    <!-- P: Notifs -->
+    <div id="p-notifs" class="p-pg" style="display:none">
+      <div class="card" style="padding:.2rem 1rem">
+        <div class="notif-row"><div class="ndot"></div><div><div class="ni-title">Kumbusho — James Waweru</div><div class="ni-body">KES 5,000 inabaki. Lipa kabla ya Juni 30, 2025.</div><div class="ni-time">Leo, 8:00 AM</div></div></div>
+        <div class="notif-row"><div class="ndot read"></div><div><div class="ni-title">Malipo Yamethibitishwa — Sarah</div><div class="ni-body">KES 22,000 imepokelewa. Sarah amelipa kikamilifu Muhula 2.</div><div class="ni-time">2 Jun 2025</div></div></div>
+        <div class="notif-row"><div class="ndot read"></div><div><div class="ni-title">Ada za Muhula 2 Zimechapishwa</div><div class="ni-body">Nairobi Greenfields imechapisha ada za Muhula 2, 2025.</div><div class="ni-time">1 May 2025</div></div></div>
+      </div>
+    </div>
+
+  </div><!-- /parent-body -->
+
+  <div class="tabbar" id="parent-tabs">
+    <button class="tb-tab on" onclick="showPg('parent','p-home')"><div class="ti">🏠</div><div class="tl">Nyumbani</div></button>
+    <button class="tb-tab" onclick="showPg('parent','p-statement')"><div class="ti">📋</div><div class="tl">Taarifa</div></button>
+    <button class="tb-tab" onclick="openMpesa('James Waweru','Form 1B',5000)"><div class="ti">💳</div><div class="tl">Lipa</div></button>
+    <button class="tb-tab" onclick="showPg('parent','p-receipts')"><div class="ti">🧾</div><div class="tl">Risiti</div></button>
+    <button class="tb-tab" onclick="showPg('parent','p-notifs')"><div class="ti">🔔</div><div class="tl">Arifa</div></button>
+  </div>
+</div>
+
+<!-- ════════════════════════════════
+     ④ STUDENT APP
+════════════════════════════════ -->
+<div id="student" class="scr">
+  <div class="topbar">
+    <button class="tb-back" onclick="go('welcome')">← Rudi</button>
+    <div class="tb-logo">Elimu<span>Pay</span></div>
+    <div class="tb-right"><div class="tb-av">JW</div></div>
+  </div>
+
+  <div class="body-scroll">
+    <div class="card" style="background:var(--gxl);border-color:var(--gl)">
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <div>
+          <div style="font-size:.68rem;color:var(--fog);text-transform:uppercase;letter-spacing:1px">Nambari ya Kujisajili</div>
+          <div style="font-size:1.15rem;font-weight:800;color:var(--gd);font-family:'Courier New',monospace;letter-spacing:1px;margin:.2rem 0">2023/0041</div>
+          <div style="font-size:.78rem;color:var(--fog)">Form 1B · Nairobi Greenfields Academy</div>
+        </div>
+        <div class="tb-av" style="width:48px;height:48px;font-size:1rem;border-radius:14px">JW</div>
+      </div>
+    </div>
+
+    <div class="pay-card">
+      <div class="pc-label">Salio Langu — Muhula 2, 2025</div>
+      <div class="pc-amount">KES 5,000 <span style="font-size:1rem;opacity:.6">inabaki</span></div>
+      <div class="pc-sub">13,000 imelipwa · 18,000 jumla</div>
+      <div class="pc-progress" style="margin-top:.9rem">
+        <div class="pc-bar-track"><div class="pc-bar-fill" style="width:72%"></div></div>
+        <div class="pc-bar-labels"><span>72% imelipwa</span><span>Mwisho: Jun 30</span></div>
+      </div>
+    </div>
+
+    <div class="alert bad"><div class="ai">⚠️</div><div>Salio lako liko. Omba mzazi au mlezi wako alipe KES 5,000 kabla ya Juni 30 ili kuepuka usumbufu wa masomo yako.</div></div>
+
+    <div class="sec-row"><h3>Historia ya Malipo</h3></div>
+    <div class="card" style="padding:.2rem 1rem">
+      <div class="txn"><div class="txn-ic in">💚</div><div class="txn-body"><div class="txn-name">Malipo Yamepokelewa</div><div class="txn-when">5 Jun 2025 · M-Pesa · QJF4TR7</div></div><div class="txn-amt in">8,500</div></div>
+      <div class="txn"><div class="txn-ic in">💚</div><div class="txn-body"><div class="txn-name">Malipo Yamepokelewa</div><div class="txn-when">1 Jun 2025 · M-Pesa · QNM3VX5</div></div><div class="txn-amt in">4,500</div></div>
+      <div class="txn"><div class="txn-ic" style="background:var(--line)">📋</div><div class="txn-body"><div class="txn-name" style="color:var(--fog)">Salio Linalosubiri</div><div class="txn-when">Mwisho Jun 30, 2025</div></div><div class="txn-amt" style="color:var(--red)">5,000</div></div>
+    </div>
+  </div>
+
+  <div class="tabbar">
+    <button class="tb-tab on"><div class="ti">🎓</div><div class="tl">Ada Zangu</div></button>
+  </div>
+</div>
+
+<!-- ════════════════════════════════
+     ⑤ M-PESA MODAL
+════════════════════════════════ -->
+<div class="overlay" id="mpOverlay">
+  <div class="sheet" id="mpSheet">
+    <div class="handle"></div>
+
+    <!-- Step 1: Fill details -->
+    <div id="mp1">
+      <div class="sh-title">Lipa Ada kwa M-Pesa</div>
+      <div class="sh-sub" id="mpInfo">James Waweru · Form 1B · Muhula 2</div>
+
+      <div class="mpesa-top">
+        <div style="font-size:2rem">💚</div>
+        <div><div class="mp-brand">M-PESA</div><div class="mp-brand-sub">Safaricom · Malipo Salama</div></div>
+      </div>
+
+      <div class="amount-hero">
+        <div class="ah-lbl">Kiasi cha Kulipa</div>
+        <div class="ah-val" id="mpAmt">KES 5,000</div>
+        <div class="ah-fee">+ Ada ya ElimuPay: KES <span id="mpFeeAmt">75</span> (1.5%)</div>
+      </div>
+
+      <div class="fg">
+        <label class="fl">Unalipa kwa ajili ya</label>
+        <select class="fsel" id="mpFor">
+          <option>James Waweru — Form 1B (KES 5,000 inabaki)</option>
+          <option>Sarah Waweru — Form 3A (Amelipa kikamilifu)</option>
+        </select>
+      </div>
+
+      <div class="fg">
+        <label class="fl">Kiasi kingine (hiari)</label>
+        <input class="fi" type="number" id="mpCustom" placeholder="mfano 2,500" oninput="updAmt(this.value)">
+      </div>
+
+      <label class="fl">Nambari ya Simu ya M-Pesa</label>
+      <div class="phone-wrap" id="phoneWrap">
+        <div class="phone-pre">🇰🇪 +254</div>
+        <input type="tel" id="mpPhone" placeholder="7XX XXX XXX" maxlength="9" pattern="[0-9]*" inputmode="numeric">
+      </div>
+      <div class="err-msg" id="phoneErr" style="display:none">Weka nambari sahihi ya simu (digits 9)</div>
+
+      <button class="btn-pay" id="mpBtn" onclick="pay()">Tuma Ombi la M-Pesa →</button>
+      <div style="font-size:.73rem;color:var(--fog);text-align:center;margin-top:.6rem">Utapokea ujumbe wa M-Pesa kwenye simu yako. Ingiza PIN yako ili kukamilisha.</div>
+    </div>
+
+    <!-- Step 2: Processing -->
+    <div id="mp2" style="display:none">
+      <div class="proc">
+        <span class="proc-emoji">📱</span>
+        <div class="proc-title">Ombi Limetumwa!</div>
+        <div class="proc-sub">Angalia simu yako kwa ujumbe wa M-Pesa.<br>Ingiza PIN yako ili kuthibitisha malipo.</div>
+        <div class="dots"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>
+        <div style="font-size:.72rem;color:var(--fog);margin-top:.7rem">Inasubiri uthibitisho wa PIN…</div>
+      </div>
+    </div>
+
+    <!-- Step 3: Success -->
+    <div id="mp3" style="display:none">
+      <div class="succ">
+        <div class="succ-ring">✓</div>
+        <div class="succ-title">Malipo Yamefanikiwa!</div>
+        <div class="succ-sub">Malipo yako yamepokelewa na kurekodiwa na shule.</div>
+        <div class="ref-box">
+          <div class="ref-lbl">Nambari ya Kumbukumbu ya M-Pesa</div>
+          <div class="ref-val" id="mpRefNo">—</div>
+        </div>
+        <div class="rcpt" style="text-align:left">
+          <div class="rcpt-row"><span>Mwanafunzi</span><span id="rcptName">—</span></div>
+          <div class="rcpt-row"><span>Kiasi</span><span id="rcptAmt" style="color:var(--gd);font-weight:800">—</span></div>
+          <div class="rcpt-row"><span>Ada ya Huduma</span><span id="rcptFee">—</span></div>
+          <div class="rcpt-row"><span>Tarehe</span><span id="rcptDate">—</span></div>
+          <div class="rcpt-row"><span>Shule</span><span>Nairobi Greenfields</span></div>
+        </div>
+        <button class="btn-pay" style="margin-top:.8rem" onclick="closeMp()">Imekamilika ✓</button>
+      </div>
+    </div>
+
+    <button class="sh-cancel" onclick="closeMp()">✕ Ghairi / Cancel</button>
+  </div>
+</div>
+
+<script>
+/* ═══════ STATE ═══════ */
+let mpAmt = 5000, mpStu = 'James Waweru';
+
+/* ═══════ SCREEN NAV ═══════ */
+function go(id) {
+  document.querySelectorAll('.scr').forEach(s => s.classList.remove('on'));
+  document.getElementById(id).classList.add('on');
+  window.scrollTo(0,0);
+}
+
+/* ═══════ PAGE SWITCHING (within a role) ═══════ */
+function showPg(role, pgId) {
+  const prefix = role === 'school' ? 's-' : role === 'parent' ? 'p-' : 'st-';
+  const body = document.getElementById(role + '-body');
+  if (body) {
+    body.querySelectorAll('[id^="' + prefix + '"]').forEach(p => p.style.display = 'none');
+  }
+  const pg = document.getElementById(pgId);
+  if (pg) pg.style.display = 'block';
+
+  // Tab highlight
+  const tabBar = document.getElementById(role + '-tabs');
+  if (tabBar) {
+    const allTabs = tabBar.querySelectorAll('.tb-tab');
+    allTabs.forEach(t => t.classList.remove('on'));
+    const map = {
+      school: { 's-dash':0, 's-students':1, 's-payments':2, 's-reports':3, 's-notifs':4 },
+      parent: { 'p-home':0, 'p-statement':1, 'p-receipts':3, 'p-notifs':4 }
+    };
+    const idx = (map[role] || {})[pgId];
+    if (idx !== undefined && allTabs[idx]) allTabs[idx].classList.add('on');
+  }
+
+  // Scroll to top
+  const bodyEl = document.getElementById(role + '-body') || document.querySelector('#' + role + ' .body-scroll');
+  if (bodyEl) bodyEl.scrollTop = 0;
+}
+
+/* ═══════ CHILD SELECT ═══════ */
+function selectChild(name, bal) {
+  document.querySelectorAll('.child-card').forEach(c => c.classList.remove('selected'));
+  event.currentTarget.classList.add('selected');
+  if (bal > 0) {
+    mpStu = name + ' Waweru'; mpAmt = bal;
+    toast('Umechagua ' + name + ' · KES ' + bal.toLocaleString() + ' inabaki');
+  } else {
+    toast(name + ' amelipa kikamilifu ✓');
+  }
+}
+
+/* ═══════ TOAST ═══════ */
+function toast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2800);
+}
+
+/* ═══════ M-PESA ═══════ */
+function openMpesa(stu, form, amt) {
+  mpStu = stu; mpAmt = amt || 5000;
+  document.getElementById('mpInfo').textContent = stu + ' · ' + form + ' · Muhula 2, 2025';
+  document.getElementById('mpAmt').textContent = 'KES ' + mpAmt.toLocaleString();
+  document.getElementById('mpFeeAmt').textContent = Math.ceil(mpAmt * .015).toLocaleString();
+  document.getElementById('mpCustom').value = '';
+  document.getElementById('mpPhone').value = '';
+  document.getElementById('phoneWrap').classList.remove('err');
+  document.getElementById('phoneErr').style.display = 'none';
+  document.getElementById('mp1').style.display = 'block';
+  document.getElementById('mp2').style.display = 'none';
+  document.getElementById('mp3').style.display = 'none';
+  document.getElementById('mpOverlay').classList.add('on');
+}
+
+function updAmt(v) {
+  const n = parseInt(v);
+  if (n > 0) {
+    mpAmt = n;
+    document.getElementById('mpAmt').textContent = 'KES ' + n.toLocaleString();
+    document.getElementById('mpFeeAmt').textContent = Math.ceil(n * .015).toLocaleString();
+  }
+}
+
+function pay() {
+  const ph = document.getElementById('mpPhone').value.trim();
+  if (!ph || ph.length < 9 || !/^\d+$/.test(ph)) {
+    document.getElementById('phoneWrap').classList.add('err');
+    document.getElementById('phoneErr').style.display = 'block';
+    document.getElementById('mpPhone').focus();
+    return;
+  }
+  document.getElementById('mp1').style.display = 'none';
+  document.getElementById('mp2').style.display = 'block';
+  setTimeout(() => {
+    document.getElementById('mp2').style.display = 'none';
+    document.getElementById('mp3').style.display = 'block';
+    const ref = 'Q' + Math.random().toString(36).toUpperCase().replace(/[^A-Z0-9]/g,'').slice(0,6);
+    document.getElementById('mpRefNo').textContent = ref;
+    document.getElementById('rcptName').textContent = mpStu;
+    document.getElementById('rcptAmt').textContent = 'KES ' + mpAmt.toLocaleString();
+    document.getElementById('rcptFee').textContent = 'KES ' + Math.ceil(mpAmt * .015).toLocaleString();
+    document.getElementById('rcptDate').textContent = new Date().toLocaleString('sw-KE',{day:'numeric',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'});
+  }, 3200);
+}
+
+function closeMp() {
+  document.getElementById('mpOverlay').classList.remove('on');
+}
+
+document.getElementById('mpOverlay').addEventListener('click', e => {
+  if (e.target === document.getElementById('mpOverlay')) closeMp();
+});
+
+/* Phone input — numbers only */
+document.getElementById('mpPhone').addEventListener('input', function() {
+  this.value = this.value.replace(/\D/g,'').slice(0,9);
+  document.getElementById('phoneWrap').classList.remove('err');
+  document.getElementById('phoneErr').style.display = 'none';
+});
+
+/* ═══════ PILL TABS ═══════ */
+document.querySelectorAll('.pills').forEach(wrap => {
+  wrap.querySelectorAll('.pill').forEach(p => {
+    p.addEventListener('click', () => {
+      wrap.querySelectorAll('.pill').forEach(x => x.classList.remove('on'));
+      p.classList.add('on');
+    });
+  });
+});
+</script>
+</body>
+</html>
